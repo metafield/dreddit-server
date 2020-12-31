@@ -8,14 +8,10 @@ import { buildSchema } from 'type-graphql';
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
-// import { Post } from './entities/Post';
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
-
-  // const newPost = orm.em.create<Post>('Post', { title: 'Hello thar' });
-  // await orm.em.persistAndFlush(newPost);
 
   const app = express();
 
