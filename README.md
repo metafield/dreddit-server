@@ -4,9 +4,15 @@
 
 If using dockerized postgresql (can use this guide https://docs.docker.com/engine/examples/postgresql_service/) be sure to run `docker run --rm -P --name pg_test eg_postgresql` if the service is down.
 
-Since postgres is removed (--rm) on contianer shutdown be sure to recreate the `dreddit` database. TODO: automate this
+Since postgres is removed (--rm) on container shutdown be sure to recreate the `dreddit` database. TODO: automate this
 
 # The Flow
+
+### services:
+
+redis: TODO: decide to -rm this on container shutdown (erring on a no to persist it to match production)
+
+- `docker run -d -p 6379:6379 --name redis4dreddit redis`
 
 ### install:
 
@@ -45,3 +51,14 @@ Since postgres is removed (--rm) on contianer shutdown be sure to recreate the `
 - Create a resolver with type-graphql for the entity and include it in the apollo server resolvers config.
 - Create the logic for the feature and then test using graphQL playground.
 - Write unit tests for the feature if you did not already.
+
+### Sessions:
+
+- `yarn add redis connect-redis express-session`
+- `yarn add -D @types/redis @types/express-session @types/connect-redis`
+- follow install @ https://github.com/tj/connect-redis
+- set up the cookie and session options
+- access sessions in resolves by using req/res object in apollo server's `context`:
+  `context: ({ req, res }): MyContext => ({ em: orm.em, req, res })`
+- don't forget to update MyContext types for the new context values; req and res.
+- when testing cookies in playground be sure to set `"request.credentials": "include",` in config (gear in top right)
