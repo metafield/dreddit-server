@@ -79,3 +79,8 @@ When user makes a request: `2222suofiusuf` -> sent to server
 
 The server decrypts the key using the secret provided upon setup which transforms:
 `2222suofiusuf` -> `sess:1111djoisjfijos` reaving the session variables for that user
+
+### Next: Adding the Front
+
+- install next and optionally a UI framework: `npx create-next-app --example with-chakra-ui somename`
+- see the front end project for more info
