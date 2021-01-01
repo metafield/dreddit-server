@@ -62,3 +62,20 @@ redis: TODO: decide to -rm this on container shutdown (erring on a no to persist
   `context: ({ req, res }): MyContext => ({ em: orm.em, req, res })`
 - don't forget to update MyContext types for the new context values; req and res.
 - when testing cookies in playground be sure to set `"request.credentials": "include",` in config (gear in top right)
+
+## How Sessions Work
+
+When a property on req.session is set that data will be saved to redis.
+`req.session.userId = user.id`
+will give us:
+{userId: 1} -- send to redis -- >
+
+In redis (a key value store) the session will look like this:
+key: `sess:1111djoisjfijos` val: `{ userId: 1 }`
+
+The session middleware (express-session) sets a cookie on browser: `2222suofiusuf` which is a encrypts version of the session key: `1111djoisjfijos`
+
+When user makes a request: `2222suofiusuf` -> sent to server
+
+The server decrypts the key using the secret provided upon setup which transforms:
+`2222suofiusuf` -> `sess:1111djoisjfijos` reaving the session variables for that user
