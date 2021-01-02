@@ -44,6 +44,11 @@ redis: TODO: decide to -rm this on container shutdown (erring on a no to persist
 - run `.listen` on the express app
 - pass required functionality such as the ORM into the context
 
+### fixing cors errors
+
+- add cors express middleware: `yarn add cors`
+- config cors in the app middleware: app.use(cors({origin: ...}))
+
 ### Adding Main Functionality:
 
 - Create an entity if it needs one
