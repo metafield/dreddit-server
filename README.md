@@ -48,6 +48,7 @@ redis: TODO: decide to -rm this on container shutdown (erring on a no to persist
 
 - add cors express middleware: `yarn add cors`
 - config cors in the app middleware: app.use(cors({origin: ...}))
+- make sure to set cors to false in the apollo server config or it will override these custom settings!
 
 ### Adding Main Functionality:
 
