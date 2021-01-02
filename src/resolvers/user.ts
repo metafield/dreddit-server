@@ -84,8 +84,8 @@ export class UserResolver {
     try {
       await em.persistAndFlush(user);
     } catch (err) {
-      // 23505: duplicate username error
-      if ((err.code = '23505' || err.detail.includes('already exists'))) {
+      // TODO: is this the best way of seeing if an error occurred?
+      if (err.detail.includes('already exists')) {
         return {
           errors: [
             {
