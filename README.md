@@ -88,5 +88,16 @@ The server decrypts the key using the secret provided upon setup which transform
 
 ### Next: Adding the Front
 
-- install next and optionally a UI framework: `npx create-next-app --example with-chakra-ui somename`
+- install next and optionally a UI framework: `npx create-next-app --example with-chakra-ui someName`
 - see the front end project for more info
+
+### Nodemailer: send some emails
+
+- `yarn add nodemailer` - `https://nodemailer.com
+- add email to entities
+- create migration
+- remove old users or set them to nullable in the entity
+- update InputType UsernamePasswordInput (user.ts resolver) to include email
+- add some validation/errors for email in register mutation
+- make sure to pass in the email to the new user creation: `em.create`
+- change login from UsernamePassword -> arg: usernameOrEmail arg: password to lety the user choose.
