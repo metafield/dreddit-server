@@ -101,3 +101,7 @@ The server decrypts the key using the secret provided upon setup which transform
 - add some validation/errors for email in register mutation
 - make sure to pass in the email to the new user creation: `em.create`
 - change login from UsernamePassword -> arg: usernameOrEmail arg: password to lety the user choose.
+- send a link with a UUID token generated to the users email: `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
+- we store this in redis and we need to interact with redis so grab both: `yarn add ioredis uuid`
+- add the redis client to the context remembering to update the `MyContext` type
+- remove `redis` (the old client) since we no longer use it

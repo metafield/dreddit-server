@@ -1,5 +1,6 @@
 import { EntityManager, IDatabaseDriver, Connection } from '@mikro-orm/core';
 import { Request, Response } from 'express';
+import { Redis } from 'ioredis';
 
 // merge express-session with an interface to provide accurate session types
 // https://www.typescriptlang.org/docs/handbook/declaration-merging.html
@@ -20,4 +21,5 @@ export type MyContext = {
   em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
   req: Request;
   res: Response;
+  redis: Redis;
 };
