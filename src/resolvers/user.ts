@@ -15,6 +15,7 @@ import { UsernamePasswordInput } from './UsernamePasswordInput';
 import { validateRegister } from '../utils/validateRegister';
 import { sendEmail } from '../utils/sendEmail';
 import { v4 } from 'uuid';
+import { getConnection } from 'typeorm';
 
 @ObjectType()
 class FieldError {
@@ -35,23 +36,21 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { req, em }: MyContext) {
+  me(@Ctx() { req }: MyContext) {
     // if not logged in
     if (!req.session.userId) {
       return null;
     }
 
-    const user = await em.findOne(User, { id: req.session.userId });
-
-    return user;
+    return User.findOne(req.session.userId);
   }
 
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg('email') email: string,
-    @Ctx() { em, redis }: MyContext
+    @Ctx() { redis }: MyContext
   ) {
-    const user = await em.findOne(User, { email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       // email not in database / return true for security purposes
       return true;
@@ -76,7 +75,7 @@ export class UserResolver {
   async changePassword(
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() { redis, em, req }: MyContext
+    @Ctx() { redis, req }: MyContext
   ): Promise<UserResponse> {
     // validate
     if (newPassword.length <= 3) {
@@ -104,7 +103,7 @@ export class UserResolver {
       };
     }
 
-    const user = await em.findOne(User, { id: parseInt(userId) });
+    const user = await User.findOne(parseInt(userId));
     if (!user) {
       return {
         errors: [
@@ -119,7 +118,7 @@ export class UserResolver {
     const hashedPassword = await argon2.hash(newPassword);
     user.password = hashedPassword;
 
-    await em.persistAndFlush(user);
+    await User.update({ id: user.id }, { password: hashedPassword });
 
     // login user after password change
     req.session.userId = user.id;
@@ -133,7 +132,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg('options') options: UsernamePasswordInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const errors = validateRegister(options);
     if (errors) {
@@ -141,13 +140,31 @@ export class UserResolver {
     }
 
     const hashedPassword = await argon2.hash(options.password);
-    const user = em.create(User, {
-      username: options.username,
-      email: options.email,
-      password: hashedPassword,
-    });
+    // an example using query builder we don;t need to do this you can just use create:
+    // await User.create({
+    //   username: options.username,
+    //   email: options.email,
+    //   password: hashedPassword,
+    // }).save();
+
+    let user;
     try {
-      await em.persistAndFlush(user);
+      const result = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({
+          username: options.username,
+          email: options.email,
+          password: hashedPassword,
+        })
+        .returning('*')
+        .execute();
+
+      // TODO: we  grab the returned data using raw here but if we didn't
+      // use 'returning' it is likely the result would have has the object
+      // on it anyway.just log result!
+      user = result.raw[0];
     } catch (err) {
       // 23505: duplicate username error
       if ((err.code = '23505' || err.detail.includes('already exists'))) {
@@ -172,13 +189,12 @@ export class UserResolver {
     @Arg('usernameOrEmail') usernameOrEmail: string,
     @Arg('password') password: string,
 
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(
-      User,
+    const user = await User.findOne(
       usernameOrEmail.includes('@')
-        ? { email: usernameOrEmail }
-        : { username: usernameOrEmail }
+        ? { where: { email: usernameOrEmail } }
+        : { where: { username: usernameOrEmail } }
     );
     if (!user) {
       return {

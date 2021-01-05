@@ -2,7 +2,11 @@
 
 `yarn watch`, `yarn run dev` to spin up a dev server
 
-If using dockerized postgresql (can use this guide https://docs.docker.com/engine/examples/postgresql_service/) be sure to run `docker run --rm -P --name pg_test eg_postgresql` if the service is down.
+If using dockerized postgresql (can use this guide https://docs.docker.com/engine/examples/postgresql_service/) be sure to run `docker run --rm -P --name pg4dreddit eg_postgresql` if the service is down.
+
+if you need to get into postgres from the command line oyu can do psql over docker via:
+`docker exec -it pg4dreddit sh`
+`psql`
 
 Since postgres is removed (--rm) on container shutdown be sure to recreate the `dreddit` database. TODO: automate this
 
@@ -28,12 +32,16 @@ redis: TODO: decide to -rm this on container shutdown (erring on a no to persist
 
 ### ORM Setup:
 
+#### MikroORM
+
 - spin up postgres with docker
 - make a new database for the project
 - create entities with constraints
 - make sure the orm config is getting the entities
 - mikroORM: make sure migration.up is in the code (to create migrations from config)
 - run migrations
+
+####TypeORM
 
 ### GraphQL setup
 
