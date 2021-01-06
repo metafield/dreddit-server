@@ -23,7 +23,7 @@ const main = async () => {
     username: 'docker',
     password: 'docker',
     logging: true,
-    // synchronize: true, // auto-migrations and can cause issues if left on
+    synchronize: false, // auto-migrations and can cause issues if left on
     entities: [Post, User],
   });
 
