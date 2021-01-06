@@ -4,13 +4,16 @@ import {
   Ctx,
   Field,
   InputType,
+  Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
 import { MyContext } from '../types';
 import { isAuth } from '../middleware/isAuth';
+import { getConnection } from 'typeorm';
 
 @InputType()
 class PostInput {
@@ -20,11 +23,46 @@ class PostInput {
   text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+  @Field()
+  hasMore: boolean;
+}
+
 @Resolver()
 export class PostResolver {
-  @Query(() => [Post])
-  posts(): Promise<Post[]> {
-    return Post.find();
+  @Query(() => PaginatedPosts)
+  async posts(
+    @Arg('limit', () => Int) limit: number,
+    // cursor will be null first time this is run
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null // the date post was created
+  ): Promise<PaginatedPosts> {
+    const realLimit = Math.min(50, limit);
+    const reaLimitPlusOne = realLimit + 1;
+
+    const replacements: any[] = [reaLimitPlusOne];
+
+    if (cursor) {
+      replacements.push(cursor);
+    }
+
+    const posts = await getConnection().query(
+      `
+    select p.*
+    from post p
+    ${cursor ? `where p."createdAt" < $2` : ''}
+    order by p."createdAt" DESC
+    limit $1
+    `,
+      replacements
+    );
+
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === reaLimitPlusOne,
+    };
   }
 
   @Query(() => Post, { nullable: true })
