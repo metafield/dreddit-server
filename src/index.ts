@@ -14,6 +14,7 @@ import { MyContext } from './types';
 import cors from 'cors';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
+import path from 'path';
 
 const main = async () => {
   const conn = await createConnection({
@@ -24,8 +25,11 @@ const main = async () => {
     password: 'docker',
     logging: true,
     synchronize: false, // auto-migrations and can cause issues if left on
+    migrations: [path.join(__dirname, './migrations/*')],
     entities: [Post, User],
   });
+
+  await conn.runMigrations();
 
   const app = express();
 
