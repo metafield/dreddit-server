@@ -2,7 +2,7 @@
 
 `yarn watch`, `yarn run dev` to spin up a dev server
 
-If using dockerized postgresql (can use this guide https://docs.docker.com/engine/examples/postgresql_service/) be sure to run `docker run --rm -P --name pg4dreddit eg_postgresql` if the service is down.
+docker run --name pg4dreddit -e POSTGRES_PASSWORD=docker -d postgres
 
 if you need to get into postgres from the command line oyu can do psql over docker via:
 `docker exec -it pg4dreddit sh`
