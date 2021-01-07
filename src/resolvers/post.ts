@@ -56,6 +56,7 @@ export class PostResolver {
     }
 
     // casting the ::date here fixes an error where it returns equal dates as less than
+    // TODO: adding createdAt and updatedAt breaks type-graphql
     const posts = await getConnection().query(
       `
     select p.*,
