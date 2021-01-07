@@ -20,16 +20,16 @@ const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
     database: 'dreddit',
-    port: 32769,
-    username: 'docker',
+    username: 'postgres',
     password: 'docker',
+    port: 54320,
     logging: true,
     synchronize: false, // auto-migrations and can cause issues if left on
     migrations: [path.join(__dirname, './migrations/*')],
     entities: [Post, User],
   });
 
-  // await Post.delete({});
+  // await Post.delete({})
 
   await conn.runMigrations();
 

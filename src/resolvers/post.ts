@@ -47,9 +47,9 @@ export class PostResolver {
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null // the date post was created
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
-    const reaLimitPlusOne = realLimit + 1;
+    const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [reaLimitPlusOne];
+    const replacements: any[] = [realLimitPlusOne];
 
     if (cursor) {
       replacements.push(cursor);
@@ -58,8 +58,14 @@ export class PostResolver {
     // casting the ::date here fixes an error where it returns equal dates as less than
     const posts = await getConnection().query(
       `
-    select p.*
+    select p.*,
+    json_build_object(
+      'id', u.id,
+      'username', u.username,
+      'email', u.email
+    ) creator
     from post p
+    inner join public.user u on u.id = p."creatorId"
     ${cursor ? `where p."createdAt"::date < $2` : ''}
     order by p."createdAt" DESC
     limit $1
@@ -67,9 +73,11 @@ export class PostResolver {
       replacements
     );
 
+    console.log('---POST---', posts[0].username);
+
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === reaLimitPlusOne,
+      hasMore: posts.length === realLimitPlusOne,
     };
   }
 
