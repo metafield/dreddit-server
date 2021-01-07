@@ -55,11 +55,12 @@ export class PostResolver {
       replacements.push(cursor);
     }
 
+    // casting the ::date here fixes an error where it returns equal dates as less than
     const posts = await getConnection().query(
       `
     select p.*
     from post p
-    ${cursor ? `where p."createdAt" < $2` : ''}
+    ${cursor ? `where p."createdAt"::date < $2` : ''}
     order by p."createdAt" DESC
     limit $1
     `,
