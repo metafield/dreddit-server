@@ -15,6 +15,8 @@ import cors from 'cors';
 import { User } from './entities/User';
 import { Post } from './entities/Post';
 import path from 'path';
+import { Vote } from './entities/Vote';
+import { createVoteLoader } from './utils/createVoteLoader';
 
 const main = async () => {
   const conn = await createConnection({
@@ -26,7 +28,7 @@ const main = async () => {
     logging: true,
     synchronize: false, // auto-migrations and can cause issues if left on
     migrations: [path.join(__dirname, './migrations/*')],
-    entities: [Post, User],
+    entities: [Post, User, Vote],
   });
 
   // await Post.delete({})
@@ -64,7 +66,12 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ req, res, redis }),
+    context: ({ req, res }): MyContext => ({
+      req,
+      res,
+      redis,
+      voteLoader: createVoteLoader(),
+    }),
   });
 
   apolloServer.applyMiddleware({
