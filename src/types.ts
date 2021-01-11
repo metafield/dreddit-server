@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Redis } from 'ioredis';
 import { createVoteLoader } from './utils/createVoteLoader';
+import { createUserLoader } from './utils/createUserLoader';
 
 // merge express-session with an interface to provide accurate session types
 // https://www.typescriptlang.org/docs/handbook/declaration-merging.html
@@ -22,4 +23,5 @@ export type MyContext = {
   res: Response;
   redis: Redis;
   voteLoader: ReturnType<typeof createVoteLoader>;
+  userLoader: ReturnType<typeof createUserLoader>;
 };

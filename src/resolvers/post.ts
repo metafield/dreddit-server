@@ -17,6 +17,7 @@ import { MyContext } from '../types';
 import { isAuth } from '../middleware/isAuth';
 import { getConnection } from 'typeorm';
 import { Vote } from '../entities/Vote';
+import { User } from '../entities/User';
 
 @InputType()
 class PostInput {
@@ -36,6 +37,14 @@ class PaginatedPosts {
 
 @Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    // This will do the magic to link posts and their creators in at most 2 sql queries
+    // it will batch the id's passed to it (which is why the loaders expect an array of keys)
+    // the keys are this post.creatorId
+    return userLoader.load(post.creatorId);
+  }
+
   @FieldResolver(() => String)
   textSnippet(@Root() root: Post) {
     return root.text.slice(0, 70) + '...';
@@ -132,18 +141,33 @@ export class PostResolver {
     }
 
     // casting the ::date here fixes an error where it returns equal dates as less than
-    // TODO: adding createdAt and updatedAt breaks type-graphql
+    // TODO: this SQL for posts fetches creators even when we may not need them video: 11:10:34
+    // we could and do (the og logic is below) split this into multiple queries or
+    // add a field resolver for a post creator(which we end up doing above)
+    // `
+    // select p.*,
+    // json_build_object(
+    //   'id', u.id,
+    //   'username', u.username,
+    //   'email', u.email
+    // ) creator
+    // from post p
+    // inner join public.user u on u.id = p."creatorId"
+    // ${cursor ? `where p."createdAt"::date < $2` : ''}
+    // order by p."createdAt" DESC
+    // limit $1
+    // `;
+    //
+    // having a resolver for this is a massive performance hit because now we are doing
+    // an extra 15-20 sql requests depending on how many posts we fetch
+    // we can use the dataloader library to handle this for us
+    // is is an n+1 problem
+    // we fix this by making a data loader and then using that loader in the Creator resolver
+    // right here in this file. ^
+
     const posts = await getConnection().query(
       `
-    select p.*,
-    json_build_object(
-      'id', u.id,
-      'username', u.username,
-      'email', u.email
-    ) creator
-    from post p
-    inner join public.user u on u.id = p."creatorId"
-    ${cursor ? `where p."createdAt"::date < $2` : ''}
+    select p.* from post p ${cursor ? `where p."createdAt"::date < $2` : ''}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -158,7 +182,7 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
-    return Post.findOne(id, { relations: ['creator'] });
+    return Post.findOne(id);
   }
 
   @Mutation(() => Post)
